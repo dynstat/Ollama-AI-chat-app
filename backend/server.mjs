@@ -6,19 +6,61 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Forward request to Ollama running on host (host.docker.internal)
+// Configuration via environment variables with safe defaults
+const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://host.docker.internal:11434";
+// Default to a smaller model to reduce upstream errors on constrained hosts
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen:4b";
+const PORT = Number(process.env.PORT || 3001);
+
+// Health endpoint
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+// Forward request to Ollama running on host (or configured host)
 app.post("/chat", async (req, res) => {
   try {
+    const { prompt } = req.body ?? {};
+    if (typeof prompt !== "string" || prompt.trim().length === 0) {
+      return res.status(400).json({ error: "'prompt' must be a non-empty string" });
+    }
+
     const response = await axios.post(
-      "http://host.docker.internal:11434/api/generate", // host machine Ollama
-      { model: "gpt-oss:20b", prompt: req.body.prompt },
-      { responseType: "stream" }
+      `${OLLAMA_HOST}/api/generate`,
+      { model: OLLAMA_MODEL, prompt },
+      { responseType: "stream", timeout: 300000 }
     );
-    response.data.pipe(res); // stream Ollama’s response back
+
+    // Stream Ollama’s response back to the client
+    response.data.pipe(res);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Error connecting to Ollama");
+    const message = err?.message || "Unknown error";
+    const status = err?.response?.status || 500;
+    const hasUpstreamData = Boolean(err?.response?.data);
+    console.error(`Chat request failed: ${message}${hasUpstreamData ? " (upstream error)" : ""}`);
+
+    // If upstream provided a textual body, forward it
+    if (typeof err?.response?.data === "string") {
+      return res.status(status).send(err.response.data);
+    }
+
+    // If upstream provided a stream, buffer it to return meaningful details
+    if (err?.response?.data && typeof err.response.data.pipe === "function") {
+      try {
+        let body = "";
+        for await (const chunk of err.response.data) {
+          body += chunk.toString();
+        }
+        if (body) {
+          return res.status(status).send(body);
+        }
+      } catch (streamErr) {
+        console.error(`Failed to read upstream error stream: ${streamErr?.message || streamErr}`);
+      }
+    }
+
+    return res.status(status).json({ error: "Error connecting to Ollama", details: message });
   }
 });
 
-app.listen(3001, () => console.log("Backend running on port 3001"));
+app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));

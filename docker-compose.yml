@@ -2,20 +2,26 @@ services:
   backend:
     build: ./backend
     container_name: chat-backend
-    ports:
-      - "3001:3001"
     environment:
       - OLLAMA_HOST=http://host.docker.internal:11434
       - OLLAMA_MODEL=qwen:4b
+      # Optional: set an API key for public exposure
+      # - API_KEY=change-me
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build: ./frontend
     container_name: chat-frontend
     ports:
-      - "5173:5173"
+      - "8080:80"
     depends_on:
-      - backend
-    environment:
-      - VITE_BACKEND_URL=
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

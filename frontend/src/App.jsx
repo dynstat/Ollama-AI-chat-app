@@ -120,7 +120,7 @@ function App() {
     abortControllerRef.current = controller;
 
     try {
-      const urlBase = import.meta.env.VITE_BACKEND_URL || "";
+      const urlBase = import.meta.env.VITE_BACKEND_URL || "/api";
       const fullPrompt = buildContextualPrompt(prompt.trim());
       setPrompt("");
 

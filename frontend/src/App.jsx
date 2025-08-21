@@ -17,11 +17,61 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-      const text = await res.text();
       if (!res.ok) {
-        throw new Error(text || `Request failed with status ${res.status}`);
+        const errorText = await res.text();
+        throw new Error(errorText || `Request failed with status ${res.status}`);
       }
-      setResponse(text);
+
+      // Stream NDJSON from the backend and append only the "response" field
+      if (!res.body) {
+        // Fallback: no streaming support
+        const text = await res.text();
+        setResponse(text);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete lines; keep partial in buffer
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const rawLine of lines) {
+          const line = rawLine.trim();
+          if (!line) continue;
+          try {
+            const json = JSON.parse(line);
+            if (typeof json.response === "string" && json.response.length > 0) {
+              setResponse(prev => prev + json.response);
+            }
+            if (json.done === true) {
+              // Drain any remaining bytes and exit
+              try { await reader.cancel(); } catch (_) { /* ignore */ }
+              buffer = "";
+              break;
+            }
+          } catch (parseErr) {
+            // Ignore malformed lines (e.g., partial JSON)
+          }
+        }
+      }
+
+      // Attempt to parse any trailing buffered line
+      const last = buffer.trim();
+      if (last) {
+        try {
+          const json = JSON.parse(last);
+          if (typeof json.response === "string" && json.response.length > 0) {
+            setResponse(prev => prev + json.response);
+          }
+        } catch (_) { /* ignore */ }
+      }
     } catch (e) {
       setError(e?.message || "Unknown error");
     } finally {

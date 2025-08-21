@@ -12,6 +12,9 @@ const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://host.docker.internal:1143
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen:4b";
 const PORT = Number(process.env.PORT || 3001);
 
+// Whitelist of allowed models for safety; extend as needed
+const ALLOWED_MODELS = new Set(["qwen:4b", "gpt-oss:20b"]);
+
 // Health endpoint
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
@@ -20,14 +23,18 @@ app.get("/health", (_req, res) => {
 // Forward request to Ollama running on host (or configured host)
 app.post("/chat", async (req, res) => {
   try {
-    const { prompt } = req.body ?? {};
+    const { prompt, model } = req.body ?? {};
     if (typeof prompt !== "string" || prompt.trim().length === 0) {
       return res.status(400).json({ error: "'prompt' must be a non-empty string" });
     }
 
+    // Choose model from request when valid, otherwise fall back to default
+    const requestedModel = typeof model === "string" ? model.trim() : "";
+    const effectiveModel = ALLOWED_MODELS.has(requestedModel) ? requestedModel : OLLAMA_MODEL;
+
     const response = await axios.post(
       `${OLLAMA_HOST}/api/generate`,
-      { model: OLLAMA_MODEL, prompt },
+      { model: effectiveModel, prompt },
       { responseType: "stream", timeout: 300000 }
     );
 

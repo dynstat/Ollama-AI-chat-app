@@ -16,6 +16,12 @@ export default defineConfig({
       '/health': {
         target: 'http://backend:3001',
         changeOrigin: true
+      },
+      // Proxy API routes to the backend service
+      '/api': {
+        target: 'http://backend:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   }

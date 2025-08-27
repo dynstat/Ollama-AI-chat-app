@@ -9,7 +9,7 @@ const generateId = (prefix = "id") => `${prefix}_${Date.now().toString(36)}_${Ma
 
 function App() {
   // Model selection state
-  const [model, setModel] = useState("codegemma:7b");
+  const [model, setModel] = useState("codegemma:2b");
 
   // Input composer state
   const [prompt, setPrompt] = useState("");
@@ -239,6 +239,7 @@ function App() {
             onChange={e => setModel(e.target.value)}
             className="model-select"
           >
+            <option value="codegemma:2b">codegemma:2b</option>
             <option value="codegemma:7b">codegemma:7b</option>
             <option value="deepseek-r1:7b">deepseek-r1:7b</option>
             <option value="gpt-oss:20b">gpt-oss:20b</option>

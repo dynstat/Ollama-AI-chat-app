@@ -7,17 +7,14 @@ import json
 OLLAMA_URL = "https://vspace.store/ollama/api/chat"
 
 # Model you want to chat with
-MODEL = "codegemma:7b"   # try also "gpt-oss20b", "deepspek-r1:7b"
+MODEL = "codegemma:2b"  # try also "gpt-oss20b", "deepspek-r1:7b"
+
 
 def chat_with_ollama(messages):
     """
     Sends a chat request to the Ollama API and streams the model response.
     """
-    payload = {
-        "model": MODEL,
-        "messages": messages,
-        "stream": True
-    }
+    payload = {"model": MODEL, "messages": messages, "stream": True}
 
     try:
         with requests.post(OLLAMA_URL, json=payload, stream=True, timeout=300) as resp:

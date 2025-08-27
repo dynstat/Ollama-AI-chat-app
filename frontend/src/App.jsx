@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { marked } from "marked";
+import hljs from "highlight.js";
 import "./App.css";
 
 // LocalStorage key for persisting conversations across sessions
@@ -38,6 +40,25 @@ function App() {
   const currentConversation = useMemo(() => {
     return conversations.find(c => c.id === currentConversationId) || null;
   }, [conversations, currentConversationId]);
+
+  // Configure markdown renderer once
+  useEffect(() => {
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      headerIds: false,
+      mangle: false,
+      highlight: (code, lang) => {
+        try {
+          if (lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
+          }
+        } catch { /* ignore */ }
+        try { return hljs.highlightAuto(code).value; } catch { /* ignore */ }
+        return code;
+      },
+    });
+  }, []);
 
   // Persist conversations to localStorage whenever they change
   useEffect(() => {
@@ -81,6 +102,23 @@ function App() {
   const handleSelectConversation = (chatId) => {
     if (isLoading) return; // avoid switching while streaming
     setCurrentConversationId(chatId);
+    setError("");
+  };
+
+  // Delete a specific conversation
+  const handleDeleteConversation = (chatId) => {
+    setConversations(prev => prev.filter(c => c.id !== chatId));
+    if (currentConversationId === chatId) {
+      const remaining = conversations.filter(c => c.id !== chatId);
+      setCurrentConversationId(remaining[0]?.id || "");
+    }
+  };
+
+  // Clear all conversations
+  const handleClearAll = () => {
+    setConversations([]);
+    setCurrentConversationId("");
+    setPrompt("");
     setError("");
   };
 
@@ -284,15 +322,17 @@ function App() {
                 <div className="chat-list-empty">No chats yet</div>
               )}
               {conversations.map(conv => (
-                <button
-                  key={conv.id}
-                  className={`chat-item ${conv.id === currentConversationId ? "active" : ""}`}
-                  onClick={() => handleSelectConversation(conv.id)}
-                >
-                  <div className="chat-item-title">{conv.title || "Untitled"}</div>
-                  <div className="chat-item-sub">{new Date(conv.createdAt).toLocaleString()}</div>
-                </button>
+                <div key={conv.id} className={`chat-item ${conv.id === currentConversationId ? "active" : ""}`}>
+                  <button className="chat-item-main" onClick={() => handleSelectConversation(conv.id)}>
+                    <div className="chat-item-title">{conv.title || "Untitled"}</div>
+                    <div className="chat-item-sub">{new Date(conv.createdAt).toLocaleString()}</div>
+                  </button>
+                  <button className="chat-item-delete" aria-label="Delete conversation" onClick={() => handleDeleteConversation(conv.id)}>✕</button>
+                </div>
               ))}
+              {conversations.length > 0 && (
+                <button className="clear-all-btn" onClick={handleClearAll}>Clear all</button>
+              )}
             </div>
           </aside>
 
@@ -303,9 +343,7 @@ function App() {
                 currentConversation.messages.map(msg => (
                   <div key={msg.id} className={`message ${msg.role}`}>
                     <div className="avatar" aria-hidden="true">{msg.role === "user" ? "🧑" : "🤖"}</div>
-                    <div className="bubble">
-                      {msg.content}
-                    </div>
+                    <div className="bubble" dangerouslySetInnerHTML={{ __html: msg.role === "assistant" ? marked.parse(msg.content || "") : marked.parse((msg.content || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")) }} />
                   </div>
                 ))
               ) : (

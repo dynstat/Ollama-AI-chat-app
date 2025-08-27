@@ -311,7 +311,7 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .messages::-webkit-scrollbar {
@@ -336,7 +336,7 @@ body {
   display: grid;
   grid-template-columns: 40px 1fr;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .message.user .bubble {
@@ -363,9 +363,9 @@ body {
 }
 
 .bubble {
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem;
   border-radius: 0.75rem;
-  white-space: pre-wrap;
+  /* white-space: pre-wrap; */
   word-wrap: break-word;
   font-size: 0.95rem;
   line-height: 1.6;
@@ -396,11 +396,139 @@ body {
   background: transparent;
 }
 
+/* Syntax Highlighting Styles */
+.bubble .hljs,
+.bubble pre code.hljs {
+  background: transparent !important;
+  color: #e2e8f0 !important;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  padding: 0 !important;
+}
+
+/* Keywords */
+.bubble .hljs-keyword,
+.bubble .hljs-selector-tag,
+.bubble .hljs-built_in,
+.bubble .hljs-name,
+.bubble .hljs-tag {
+  color: #f472b6 !important;
+  font-weight: 600;
+}
+
+/* Strings */
+.bubble .hljs-string,
+.bubble .hljs-title,
+.bubble .hljs-section,
+.bubble .hljs-attribute,
+.bubble .hljs-literal,
+.bubble .hljs-template-tag,
+.bubble .hljs-template-variable,
+.bubble .hljs-type,
+.bubble .hljs-addition {
+  color: #a3e635 !important;
+}
+
+/* Comments */
+.bubble .hljs-comment,
+.bubble .hljs-quote,
+.bubble .hljs-deletion,
+.bubble .hljs-meta {
+  color: #64748b !important;
+  font-style: italic;
+}
+
+/* Numbers */
+.bubble .hljs-selector-attr,
+.bubble .hljs-selector-pseudo,
+.bubble .hljs-number {
+  color: #fbbf24 !important;
+}
+
+/* Functions */
+.bubble .hljs-function .hljs-title,
+.bubble .hljs-attr {
+  color: #60a5fa !important;
+}
+
+/* Variables */
+.bubble .hljs-variable,
+.bubble .hljs-literal,
+.bubble .hljs-params {
+  color: #e2e8f0 !important;
+}
+
+/* Operators */
+.bubble .hljs-operator,
+.bubble .hljs-punctuation {
+  color: #94a3b8 !important;
+}
+
+/* Class names */
+.bubble .hljs-title.class_,
+.bubble .hljs-class .hljs-title {
+  color: #a78bfa !important;
+}
+
+/* Constants */
+.bubble .hljs-constant {
+  color: #fbbf24 !important;
+}
+
+/* Regex */
+.bubble .hljs-regexp {
+  color: #f97316 !important;
+}
+
+/* Special characters */
+.bubble .hljs-symbol,
+.bubble .hljs-bullet,
+.bubble .hljs-link {
+  color: #f472b6 !important;
+}
+
+/* Error */
+.bubble .hljs-err {
+  color: #ef4444 !important;
+}
+
+/* Language-specific overrides */
+.bubble .hljs-lang-javascript .hljs-keyword,
+.bubble .hljs-lang-js .hljs-keyword,
+.bubble .hljs-lang-jsx .hljs-keyword {
+  color: #f472b6 !important;
+}
+
+.bubble .hljs-lang-python .hljs-keyword {
+  color: #f472b6 !important;
+}
+
+.bubble .hljs-lang-css .hljs-property {
+  color: #60a5fa !important;
+}
+
+.bubble .hljs-lang-html .hljs-tag {
+  color: #f472b6 !important;
+}
+
+.bubble .hljs-lang-html .hljs-name {
+  color: #f472b6 !important;
+}
+
+.bubble .hljs-lang-html .hljs-attr {
+  color: #60a5fa !important;
+}
+
+.bubble .hljs-lang-html .hljs-string {
+  color: #a3e635 !important;
+}
+
 .bubble h1,
 .bubble h2,
 .bubble h3 {
   margin: 1rem 0 0.5rem;
-  color: #f8fafc;
+  color: #f8fafc !important;
 }
 
 .bubble ul,

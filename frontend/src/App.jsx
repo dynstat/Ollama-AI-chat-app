@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { marked } from "marked";
 import hljs from "highlight.js";
+import "highlight.js/styles/github-dark.css";
 import "./App.css";
 
 // LocalStorage key for persisting conversations across sessions
@@ -53,9 +54,11 @@ function App() {
           if (lang && hljs.getLanguage(lang)) {
             return hljs.highlight(code, { language: lang }).value;
           }
-        } catch { /* ignore */ }
-        try { return hljs.highlightAuto(code).value; } catch { /* ignore */ }
-        return code;
+          return hljs.highlightAuto(code).value;
+        } catch (err) {
+          console.warn('Highlight.js error:', err);
+          return code;
+        }
       },
     });
   }, []);
@@ -81,6 +84,18 @@ function App() {
   const scrollAnchorRef = useRef(null);
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [currentConversation?.messages?.length]);
+
+  // Re-highlight code blocks when messages change
+  useEffect(() => {
+    if (currentConversation?.messages?.length) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightElement(block);
+        });
+      }, 100);
+    }
   }, [currentConversation?.messages?.length]);
 
   // Create a new chat conversation

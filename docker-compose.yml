@@ -3,8 +3,9 @@ services:
     build: ./backend
     container_name: chat-backend
     environment:
-      - OLLAMA_HOST=http://host.docker.internal:11434
-      - OLLAMA_MODEL=qwen:4b
+      # - OLLAMA_HOST=http://host.docker.internal:11434
+      - OLLAMA_HOST=https://vspace.store/ollama/
+      - OLLAMA_MODEL=codegemma:7b
       # Optional: set an API key for public exposure
       # - API_KEY=change-me
     extra_hosts:

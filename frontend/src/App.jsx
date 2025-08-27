@@ -239,7 +239,8 @@ function App() {
             onChange={e => setModel(e.target.value)}
             className="model-select"
           >
-            <option value="qwen:4b">qwen:4b</option>
+            <option value="codegemma:7b">codegemma:7b</option>
+            <option value="deepseek-r1:7b">deepseek-r1:7b</option>
             <option value="gpt-oss:20b">gpt-oss:20b</option>
           </select>
         </div>

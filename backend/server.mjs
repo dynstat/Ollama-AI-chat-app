@@ -43,13 +43,14 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Configuration via environment variables with safe defaults
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://host.docker.internal:11434";
+const OLLAMA_HOST = process.env.OLLAMA_HOST || "https://vspace.store/ollama/";
 // Default to a smaller model to reduce upstream errors on constrained hosts
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen:4b";
-const PORT = Number(process.env.PORT || 3001);
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "codegemma:7b";
+// const PORT = Number(process.env.PORT || 443);
+const PORT = 443
 
 // Whitelist of allowed models for safety; extend as needed
-const ALLOWED_MODELS = new Set(["qwen:4b", "gpt-oss:20b"]);
+const ALLOWED_MODELS = new Set(["codegemma:7b", "deepseek-r1:7b", "gpt-oss:20b"]);
 
 // Metrics setup
 const register = new Registry();
@@ -62,7 +63,7 @@ app.get("/health", (_req, res) => {
 app.get("/ready", async (_req, res) => {
   try {
     // Shallow check to confirm Ollama is reachable
-    await axios.get(`${process.env.OLLAMA_HOST || "http://host.docker.internal:11434"}/api/tags`, { timeout: 2000 });
+    await axios.get(`${process.env.OLLAMA_HOST || "https://vspace.store/ollama"}/api/tags`, { timeout: 2000 });
     res.status(200).json({ ready: true });
   } catch {
     res.status(503).json({ ready: false });

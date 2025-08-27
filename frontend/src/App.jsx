@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { marked } from "marked";
 import hljs from "highlight.js";
-import "highlight.js/styles/github-dark.css";
 import "./App.css";
 
 // LocalStorage key for persisting conversations across sessions
@@ -44,6 +43,12 @@ function App() {
 
   // Configure markdown renderer once
   useEffect(() => {
+    // Configure highlight.js
+    hljs.configure({
+      ignoreUnescapedHTML: true,
+      languages: ['javascript', 'python', 'css', 'html', 'json', 'bash', 'shell', 'typescript', 'jsx', 'tsx', 'php', 'java', 'c', 'cpp', 'csharp', 'go', 'rust', 'ruby', 'sql', 'yaml', 'xml', 'markdown']
+    });
+
     marked.setOptions({
       gfm: true,
       breaks: true,
@@ -92,7 +97,9 @@ function App() {
       // Small delay to ensure DOM is updated
       setTimeout(() => {
         document.querySelectorAll('pre code').forEach((block) => {
-          hljs.highlightElement(block);
+          if (!block.classList.contains('hljs')) {
+            hljs.highlightElement(block);
+          }
         });
       }, 100);
     }

@@ -9,7 +9,7 @@ const generateId = (prefix = "id") => `${prefix}_${Date.now().toString(36)}_${Ma
 
 function App() {
   // Model selection state
-  const [model, setModel] = useState("codegemma:2b");
+  const [model, setModel] = useState("qwen2:1.5b");
 
   // Input composer state
   const [prompt, setPrompt] = useState("");
@@ -18,6 +18,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const abortControllerRef = useRef(null);
+  const readerRef = useRef(null);
+  const activeRequestIdRef = useRef("");
 
   // Conversations state: list and selection
   const [conversations, setConversations] = useState(() => {
@@ -97,6 +99,15 @@ function App() {
     setError("");
     setIsLoading(true);
 
+    // If a previous stream is active, abort and cancel its reader first
+    try {
+      abortControllerRef.current?.abort();
+    } catch { /* ignore */ }
+    try {
+      await readerRef.current?.cancel?.();
+    } catch { /* ignore */ }
+    readerRef.current = null;
+
     // Create new message entries (user + placeholder assistant)
     const userMessageId = generateId("msg");
     const assistantMessageId = generateId("msg");
@@ -118,6 +129,8 @@ function App() {
     // Prepare streaming request
     const controller = new AbortController();
     abortControllerRef.current = controller;
+    const requestId = generateId("req");
+    activeRequestIdRef.current = requestId;
 
     try {
       const urlBase = import.meta.env.VITE_BACKEND_URL || "/api";
@@ -143,10 +156,16 @@ function App() {
       }
 
       const reader = res.body.getReader();
+      readerRef.current = reader;
       const decoder = new TextDecoder();
       let buffer = "";
       // eslint-disable-next-line no-constant-condition
       while (true) {
+        // If a new request started, stop processing this one
+        if (activeRequestIdRef.current !== requestId) {
+          try { await reader.cancel(); } catch { /* ignore */ }
+          break;
+        }
         const { value, done } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
@@ -190,6 +209,11 @@ function App() {
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
+      readerRef.current = null;
+      // Clear activeRequestId only if it belongs to this invocation
+      if (activeRequestIdRef.current === requestId) {
+        activeRequestIdRef.current = "";
+      }
     }
   };
 
@@ -208,11 +232,11 @@ function App() {
 
   // Stop the current streaming response
   const handleStop = () => {
-    try {
-      abortControllerRef.current?.abort();
-    } catch {
-      // ignore
-    }
+    try { abortControllerRef.current?.abort(); } catch { /* ignore */ }
+    try { readerRef.current?.cancel?.(); } catch { /* ignore */ }
+    readerRef.current = null;
+    activeRequestIdRef.current = "";
+    setIsLoading(false);
   };
 
   // Send on Enter, newline on Shift+Enter
@@ -239,6 +263,8 @@ function App() {
             onChange={e => setModel(e.target.value)}
             className="model-select"
           >
+            <option value="qwen2:1.5b">qwen2:1.5b</option>
+            <option value="qwen2:7b">qwen2:7b</option>
             <option value="codegemma:2b">codegemma:2b</option>
             <option value="codegemma:7b">codegemma:7b</option>
             <option value="deepseek-r1:7b">deepseek-r1:7b</option>

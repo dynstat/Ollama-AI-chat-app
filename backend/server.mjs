@@ -46,11 +46,11 @@ app.use(limiter);
 // Normalize to avoid double slashes when composing URLs
 const OLLAMA_BASE = (process.env.OLLAMA_HOST || "https://vspace.store/ollama").replace(/\/+$/, "");
 // Default to a smaller model to reduce upstream errors on constrained hosts
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "codegemma:2b";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2:1.5b";
 const PORT = Number(process.env.PORT || 3001);
 
 // Whitelist of allowed models for safety; extend as needed
-const ALLOWED_MODELS = new Set(["codegemma:2b", "codegemma:7b", "deepseek-r1:7b", "gpt-oss:20b"]);
+const ALLOWED_MODELS = new Set(["qwen2:1.5b", "qwen2:7b", "codegemma:2b", "codegemma:7b", "deepseek-r1:7b", "gpt-oss:20b"]);
 
 // Metrics setup
 const register = new Registry();
@@ -89,6 +89,18 @@ function requireApiKey(req, res, next) {
 }
 
 app.post("/chat", requireApiKey, async (req, res) => {
+  // Abort upstream if client disconnects
+  const abortController = new AbortController();
+  let upstreamStream = null;
+
+  function handleClientGone() {
+    try { abortController.abort(); } catch { /* ignore */ }
+    try { upstreamStream?.destroy?.(); } catch { /* ignore */ }
+  }
+  req.on("aborted", handleClientGone);
+  req.on("close", handleClientGone);
+  res.on("close", handleClientGone);
+
   try {
     const { prompt, model } = req.body ?? {};
     if (typeof prompt !== "string" || prompt.trim().length === 0) {
@@ -102,11 +114,12 @@ app.post("/chat", requireApiKey, async (req, res) => {
     const response = await axios.post(
       `${OLLAMA_BASE}/api/generate`,
       { model: effectiveModel, prompt },
-      { responseType: "stream", timeout: 300000 }
+      { responseType: "stream", timeout: 300000, signal: abortController.signal }
     );
 
     // Stream Ollama’s response back to the client
-    response.data.pipe(res);
+    upstreamStream = response.data;
+    upstreamStream.pipe(res);
   } catch (err) {
     const message = err?.message || "Unknown error";
     const status = err?.response?.status || 500;
@@ -133,7 +146,9 @@ app.post("/chat", requireApiKey, async (req, res) => {
       }
     }
 
-    return res.status(status).json({ error: "Error connecting to Ollama", details: message });
+    if (!res.headersSent) {
+      return res.status(status).json({ error: "Error connecting to Ollama", details: message });
+    }
   }
 });
 

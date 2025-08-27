@@ -43,11 +43,11 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Configuration via environment variables with safe defaults
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "https://vspace.store/ollama/";
+// Normalize to avoid double slashes when composing URLs
+const OLLAMA_BASE = (process.env.OLLAMA_HOST || "https://vspace.store/ollama").replace(/\/+$/, "");
 // Default to a smaller model to reduce upstream errors on constrained hosts
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "codegemma:7b";
-// const PORT = Number(process.env.PORT || 443);
-const PORT = 443
+const PORT = Number(process.env.PORT || 3001);
 
 // Whitelist of allowed models for safety; extend as needed
 const ALLOWED_MODELS = new Set(["codegemma:7b", "deepseek-r1:7b", "gpt-oss:20b"]);
@@ -63,7 +63,7 @@ app.get("/health", (_req, res) => {
 app.get("/ready", async (_req, res) => {
   try {
     // Shallow check to confirm Ollama is reachable
-    await axios.get(`${process.env.OLLAMA_HOST || "https://vspace.store/ollama"}/api/tags`, { timeout: 2000 });
+    await axios.get(`${OLLAMA_BASE}/api/tags`, { timeout: 2000 });
     res.status(200).json({ ready: true });
   } catch {
     res.status(503).json({ ready: false });
@@ -100,7 +100,7 @@ app.post("/chat", requireApiKey, async (req, res) => {
     const effectiveModel = ALLOWED_MODELS.has(requestedModel) ? requestedModel : OLLAMA_MODEL;
 
     const response = await axios.post(
-      `${OLLAMA_HOST}/api/generate`,
+      `${OLLAMA_BASE}/api/generate`,
       { model: effectiveModel, prompt },
       { responseType: "stream", timeout: 300000 }
     );

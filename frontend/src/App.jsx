@@ -9,7 +9,7 @@ const generateId = (prefix = "id") => `${prefix}_${Date.now().toString(36)}_${Ma
 
 function App() {
   // Model selection state
-  const [model, setModel] = useState("qwen:4b");
+  const [model, setModel] = useState("codegemma:7b");
 
   // Input composer state
   const [prompt, setPrompt] = useState("");

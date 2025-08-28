@@ -128,21 +128,6 @@ export const QUEUE_CONFIG = {
 };
 ```
 
-### Docker Resource Limits
-
-Adjust resource allocation in `docker-compose.yml`:
-
-```yaml
-deploy:
-  resources:
-    limits:
-      cpus: '2.0'
-      memory: 2G
-    reservations:
-      cpus: '0.5'
-      memory: 512M
-```
-
 ## 📱 Usage
 
 1. **Start a Conversation**: Click "New Chat" to begin

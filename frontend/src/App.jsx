@@ -42,6 +42,34 @@ function App() {
     return conversations.find(c => c.id === currentConversationId) || null;
   }, [conversations, currentConversationId]);
 
+  // Helper functions for syntax highlighting
+  const highlightAllCodeBlocks = () => {
+    const codeBlocks = document.querySelectorAll('.messages pre code:not(.hljs)');
+    if (codeBlocks.length === 0) return; // Skip if no new blocks to highlight
+
+    codeBlocks.forEach((block) => {
+      try {
+        hljs.highlightElement(block);
+      } catch (err) {
+        console.warn('Highlight.js error:', err);
+      }
+    });
+  };
+
+  const highlightMessageCodeBlocks = (messageElement) => {
+    if (!messageElement) return;
+    const codeBlocks = messageElement.querySelectorAll('pre code:not(.hljs)');
+    if (codeBlocks.length === 0) return; // Skip if no new blocks to highlight
+
+    codeBlocks.forEach((block) => {
+      try {
+        hljs.highlightElement(block);
+      } catch (err) {
+        console.warn('Highlight.js error:', err);
+      }
+    });
+  };
+
   // Configure markdown renderer once
   useEffect(() => {
     // Configure highlight.js
@@ -68,6 +96,47 @@ function App() {
       },
     });
   }, []);
+
+  // Set up MutationObserver to automatically highlight new code blocks
+  useEffect(() => {
+    const messagesContainer = document.querySelector('.messages');
+    if (!messagesContainer) return;
+
+    const observer = new MutationObserver((mutations) => {
+      let hasNewCodeBlocks = false;
+
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          // Only highlight if new code blocks were actually added
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const hasCode = node.querySelector('pre code') ||
+                (node.tagName === 'PRE' && node.querySelector('code'));
+              if (hasCode) {
+                hasNewCodeBlocks = true;
+              }
+            }
+          });
+        }
+      });
+
+      if (hasNewCodeBlocks) {
+        // Small delay to ensure all DOM changes are complete
+        setTimeout(() => {
+          highlightAllCodeBlocks();
+        }, 50);
+      }
+    });
+
+    observer.observe(messagesContainer, {
+      childList: true,
+      subtree: true,
+      attributes: false,
+      characterData: false
+    });
+
+    return () => observer.disconnect();
+  }, [currentConversation?.id]);
 
   // Persist conversations to localStorage whenever they change
   useEffect(() => {
@@ -119,11 +188,7 @@ function App() {
     if (currentConversation?.messages?.length) {
       // Small delay to ensure DOM is updated
       setTimeout(() => {
-        document.querySelectorAll('pre code').forEach((block) => {
-          if (!block.classList.contains('hljs')) {
-            hljs.highlightElement(block);
-          }
-        });
+        highlightAllCodeBlocks();
       }, 100);
     }
   }, [currentConversation?.messages?.length]);
@@ -311,6 +376,17 @@ function App() {
       });
       return updated;
     }));
+
+    // Only apply highlighting if the new content contains code blocks
+    if (textChunk.includes('```') || textChunk.includes('`')) {
+      setTimeout(() => {
+        const messageElements = document.querySelectorAll('.message.assistant');
+        const lastMessage = messageElements[messageElements.length - 1];
+        if (lastMessage) {
+          highlightMessageCodeBlocks(lastMessage);
+        }
+      }, 50);
+    }
   };
 
   // Stop the current streaming response
@@ -331,6 +407,44 @@ function App() {
       }
     }
   };
+
+  // Debounced highlighting function to prevent excessive calls
+  const debouncedHighlighting = useRef(null);
+
+  const reapplyHighlighting = () => {
+    if (debouncedHighlighting.current) {
+      clearTimeout(debouncedHighlighting.current);
+    }
+
+    debouncedHighlighting.current = setTimeout(() => {
+      highlightAllCodeBlocks();
+      debouncedHighlighting.current = null;
+    }, 300); // Increased delay to reduce frequency
+  };
+
+  // Add highlighting persistence for user interactions (less aggressive)
+  useEffect(() => {
+    const handleUserInteraction = (e) => {
+      // Only re-apply highlighting for specific interactions that might affect code display
+      // Avoid re-applying for typing in input fields
+      if (e.target.closest('.chat-input') || e.target.closest('.model-select')) {
+        return; // Skip highlighting for input field interactions
+      }
+
+      // Only re-apply for interactions that might cause layout changes
+      if (e.type === 'click' && !e.target.closest('.messages')) {
+        reapplyHighlighting();
+      }
+    };
+
+    // Listen for fewer, more specific interactions
+    document.addEventListener('click', handleUserInteraction);
+    // Remove input, focus, blur listeners to prevent constant highlighting
+
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+    };
+  }, []);
 
   return (
     <div className="app-shell">

@@ -704,3 +704,18 @@ body {
     padding: 0.5rem;
   }
 }
+
+/* Add this to your CSS to make highlighting more persistent */
+.bubble pre code.hljs {
+  transition: none !important; /* Remove any transitions that might cause flicker */
+}
+
+.bubble pre code {
+  /* Ensure highlighting styles are applied immediately */
+  transition: none !important;
+}
+
+/* Prevent any CSS animations that might interfere */
+.bubble pre code * {
+  transition: none !important;
+}

@@ -488,6 +488,35 @@ body {
   font-weight: bold;
 }
 
+/* Queue Status Styles */
+.queue-status {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #e2e8f0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10;
+  transition: opacity 0.2s ease;
+}
+
+.queue-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.queue-status::before {
+  content: "⚡";
+  margin-right: 4px;
+  font-size: 0.8rem;
+}
+
 .bubble .hljs-addition {
   color: #a3e635 !important;
   background-color: rgba(163, 230, 53, 0.1) !important;

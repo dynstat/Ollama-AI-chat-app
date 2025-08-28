@@ -19,6 +19,7 @@ function App() {
   // Request/stream control and error state
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [queueStatus, setQueueStatus] = useState(null);
   const abortControllerRef = useRef(null);
   const readerRef = useRef(null);
   const activeRequestIdRef = useRef("");
@@ -90,6 +91,28 @@ function App() {
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [currentConversation?.messages?.length]);
+
+  // Fetch queue status periodically
+  useEffect(() => {
+    const fetchQueueStatus = async () => {
+      try {
+        const urlBase = import.meta.env.VITE_BACKEND_URL || "/api";
+        const response = await fetch(`${urlBase}/queue-status`);
+        if (response.ok) {
+          const status = await response.json();
+          setQueueStatus(status);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch queue status:', error);
+      }
+    };
+
+    // Fetch immediately and then every 5 seconds
+    fetchQueueStatus();
+    const interval = setInterval(fetchQueueStatus, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Re-highlight code blocks when messages change
   useEffect(() => {
@@ -399,6 +422,16 @@ function App() {
             </div>
 
             {error && <div className="error-msg" role="alert">{error}</div>}
+
+            {/* Queue status indicator */}
+            {queueStatus && (
+              <div className="queue-status" role="status">
+                <span className="queue-info">
+                  Active: {queueStatus.activeRequests}/{queueStatus.maxConcurrent}
+                  {queueStatus.queuedRequests > 0 && ` | Queued: ${queueStatus.queuedRequests}`}
+                </span>
+              </div>
+            )}
           </section>
         </div>
       </main>

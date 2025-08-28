@@ -66,13 +66,13 @@ app.use(limiter);
 // Normalize to avoid double slashes when composing URLs
 const OLLAMA_BASE = (process.env.OLLAMA_HOST || "https://vspace.store/ollama").replace(/\/+$/, "");
 // Default to a smaller model to reduce upstream errors on constrained hosts
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2:1.5b";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen3:1.7b";
 const PORT = Number(process.env.PORT || 3001);
 
 
 
 // Whitelist of allowed models for safety; extend as needed
-const ALLOWED_MODELS = new Set(["qwen2:1.5b", "qwen2:7b", "codegemma:2b", "codegemma:7b", "deepseek-r1:7b", "gpt-oss:20b"]);
+const ALLOWED_MODELS = new Set(["qwen3:1.7b", "qwen3:8b", "qwen2:1.5b", "codegemma:2b", "codegemma:7b", "deepseek-r1:7b", "gpt-oss:20b"]);
 
 // Metrics setup
 const register = new Registry();

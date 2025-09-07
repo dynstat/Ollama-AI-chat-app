@@ -7,7 +7,7 @@ import json
 OLLAMA_URL = "https://vspace.store/ollama/api/chat"
 
 # Model you want to chat with
-MODEL = "qwen3:1.7b"  # try also "gpt-oss20b", "deepspek-r1:7b"
+MODEL = "qwen2:1.5b"  # try also "gpt-oss20b", "deepspek-r1:7b"
 
 
 def chat_with_ollama(messages):

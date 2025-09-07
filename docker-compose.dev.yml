@@ -6,7 +6,7 @@ services:
       - "3001:3001"
     environment:
       - OLLAMA_HOST=https://vspace.store/ollama/
-      - OLLAMA_MODEL=qwen3:1.7b
+      - OLLAMA_MODEL=qwen2:1.5b
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

@@ -37,7 +37,7 @@ A simple real-time chat application that connects to Ollama AI models for intell
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/dynstat/Ollama-AI-chat-app.git
    cd Ollama-AI-chat-app
    ```
 

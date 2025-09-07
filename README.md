@@ -2,7 +2,11 @@
 
 A simple real-time chat application that connects to Ollama AI models for intelligent conversations. Built with React frontend and Node.js backend, featuring concurrent request processing, syntax highlighting, and a beautiful user interface.
 
-## 🚀 Features
+## Screenshot:
+<img width="1876" height="913" alt="image" src="https://github.com/user-attachments/assets/c1eda2f6-d46e-4d16-82ca-382104688941" />
+
+
+## Features
 
 - **Real-time AI Chat**: Stream responses from Ollama AI models
 - **Concurrent Processing**: Handle multiple users simultaneously with request queuing
@@ -14,14 +18,14 @@ A simple real-time chat application that connects to Ollama AI models for intell
 - **Security**: Rate limiting, CORS protection, and security headers
 - **Health Monitoring**: Built-in health checks and metrics
 
-## 🏗️ Architecture
+## Architecture
 
 - **Frontend**: React 19 + Vite with syntax highlighting and markdown rendering
 - **Backend**: Node.js + Express with concurrent request processing
 - **AI Integration**: Ollama API with connection pooling and request queuing
 - **Deployment**: Docker containers with Nginx reverse proxy
 
-## 📋 Prerequisites
+## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
 - [Node.js](https://nodejs.org/) (for local development)
@@ -128,7 +132,7 @@ export const QUEUE_CONFIG = {
 };
 ```
 
-## 📱 Usage
+## Usage
 
 1. **Start a Conversation**: Click "New Chat" to begin
 2. **Select Model**: Choose from available Ollama models
@@ -183,7 +187,7 @@ npm run lint
 docker-compose -f docker-compose.dev.yml up --build
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 

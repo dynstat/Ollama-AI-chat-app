@@ -380,6 +380,10 @@ body {
   padding: 1rem;
   overflow: auto;
   margin: 0.75rem 0;
+  /* Ensure consistent font styling from the start */
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 .bubble code {
@@ -388,12 +392,18 @@ body {
   border-radius: 0.25rem;
   padding: 0.125rem 0.375rem;
   font-size: 0.875em;
+  /* Ensure consistent font styling for inline code */
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
 }
 
 .bubble pre code {
   border: none;
   padding: 0;
   background: transparent;
+  /* Ensure consistent font styling for code blocks */
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 /* Syntax Highlighting Styles - GitHub Dark Theme */
@@ -401,10 +411,12 @@ body {
 .bubble pre code.hljs {
   background: transparent !important;
   color: #e2e8f0 !important;
-  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
   padding: 0 !important;
+  /* Prevent any font changes during highlighting */
+  transition: none !important;
 }
 
 /* GitHub Dark Theme Base Styles */
@@ -705,17 +717,27 @@ body {
   }
 }
 
-/* Add this to your CSS to make highlighting more persistent */
+/* Prevent flickering during syntax highlighting */
 .bubble pre code.hljs {
-  transition: none !important; /* Remove any transitions that might cause flicker */
+  transition: none !important;
+  /* Remove any transitions that might cause flicker */
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
 }
 
 .bubble pre code {
   /* Ensure highlighting styles are applied immediately */
   transition: none !important;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
 }
 
 /* Prevent any CSS animations that might interfere */
 .bubble pre code * {
   transition: none !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
 }

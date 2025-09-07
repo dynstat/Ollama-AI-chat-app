@@ -11,7 +11,7 @@ const generateId = (prefix = "id") => `${prefix}_${Date.now().toString(36)}_${Ma
 
 function App() {
   // Model selection state
-  const [model, setModel] = useState("qwen3:1.7b");
+  const [model, setModel] = useState("qwen2:1.5b");
 
   // Input composer state
   const [prompt, setPrompt] = useState("");
@@ -47,12 +47,21 @@ function App() {
     const codeBlocks = document.querySelectorAll('.messages pre code:not(.hljs)');
     if (codeBlocks.length === 0) return; // Skip if no new blocks to highlight
 
-    codeBlocks.forEach((block) => {
-      try {
-        hljs.highlightElement(block);
-      } catch (err) {
-        console.warn('Highlight.js error:', err);
-      }
+    // Use requestAnimationFrame to ensure DOM is ready and prevent flickering
+    requestAnimationFrame(() => {
+      codeBlocks.forEach((block) => {
+        try {
+          // Ensure the block has consistent styling before highlighting
+          block.style.fontFamily = "'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace";
+          block.style.fontSize = "0.875rem";
+          block.style.lineHeight = "1.5";
+          block.style.transition = "none";
+
+          hljs.highlightElement(block);
+        } catch (err) {
+          console.warn('Highlight.js error:', err);
+        }
+      });
     });
   };
 
@@ -61,12 +70,21 @@ function App() {
     const codeBlocks = messageElement.querySelectorAll('pre code:not(.hljs)');
     if (codeBlocks.length === 0) return; // Skip if no new blocks to highlight
 
-    codeBlocks.forEach((block) => {
-      try {
-        hljs.highlightElement(block);
-      } catch (err) {
-        console.warn('Highlight.js error:', err);
-      }
+    // Use requestAnimationFrame to ensure DOM is ready and prevent flickering
+    requestAnimationFrame(() => {
+      codeBlocks.forEach((block) => {
+        try {
+          // Ensure the block has consistent styling before highlighting
+          block.style.fontFamily = "'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace";
+          block.style.fontSize = "0.875rem";
+          block.style.lineHeight = "1.5";
+          block.style.transition = "none";
+
+          hljs.highlightElement(block);
+        } catch (err) {
+          console.warn('Highlight.js error:', err);
+        }
+      });
     });
   };
 
@@ -121,10 +139,10 @@ function App() {
       });
 
       if (hasNewCodeBlocks) {
-        // Small delay to ensure all DOM changes are complete
-        setTimeout(() => {
+        // Use requestAnimationFrame for smoother highlighting
+        requestAnimationFrame(() => {
           highlightAllCodeBlocks();
-        }, 50);
+        });
       }
     });
 
@@ -186,10 +204,10 @@ function App() {
   // Re-highlight code blocks when messages change
   useEffect(() => {
     if (currentConversation?.messages?.length) {
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
+      // Use requestAnimationFrame for smoother highlighting
+      requestAnimationFrame(() => {
         highlightAllCodeBlocks();
-      }, 100);
+      });
     }
   }, [currentConversation?.messages?.length]);
 
@@ -232,11 +250,28 @@ function App() {
     setError("");
   };
 
-  // Build contextual prompt from conversation history
+  // Build contextual prompt from conversation history (limited to last 2 user + 2 assistant messages)
+  // This optimization reduces context size and improves model performance while maintaining recent conversation context
   const buildContextualPrompt = (userPrompt) => {
-    const history = (currentConversation?.messages || [])
+    const messages = currentConversation?.messages || [];
+
+    // Separate user and assistant messages
+    const userMessages = messages.filter(m => m.role === "user");
+    const assistantMessages = messages.filter(m => m.role === "assistant");
+
+    // Get the last 2 user messages and 2 assistant messages
+    const lastUserMessages = userMessages.slice(-2);
+    const lastAssistantMessages = assistantMessages.slice(-2);
+
+    // Combine and sort by creation time to maintain chronological order
+    const recentMessages = [...lastUserMessages, ...lastAssistantMessages]
+      .sort((a, b) => a.createdAt - b.createdAt);
+
+    // Build history string
+    const history = recentMessages
       .map(m => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
       .join("\n");
+
     const contextPrefix = history ? history + "\n" : "";
     return `${contextPrefix}User: ${userPrompt}\nAssistant:`;
   };
@@ -379,13 +414,14 @@ function App() {
 
     // Only apply highlighting if the new content contains code blocks
     if (textChunk.includes('```') || textChunk.includes('`')) {
-      setTimeout(() => {
+      // Use requestAnimationFrame for smoother highlighting during streaming
+      requestAnimationFrame(() => {
         const messageElements = document.querySelectorAll('.message.assistant');
         const lastMessage = messageElements[messageElements.length - 1];
         if (lastMessage) {
           highlightMessageCodeBlocks(lastMessage);
         }
-      }, 50);
+      });
     }
   };
 
@@ -417,12 +453,15 @@ function App() {
     }
 
     debouncedHighlighting.current = setTimeout(() => {
-      highlightAllCodeBlocks();
+      // Use requestAnimationFrame for smoother highlighting
+      requestAnimationFrame(() => {
+        highlightAllCodeBlocks();
+      });
       debouncedHighlighting.current = null;
-    }, 300); // Increased delay to reduce frequency
+    }, 500); // Increased delay to reduce frequency even more
   };
 
-  // Add highlighting persistence for user interactions (less aggressive)
+  // Add highlighting persistence for user interactions (much less aggressive)
   useEffect(() => {
     const handleUserInteraction = (e) => {
       // Only re-apply highlighting for specific interactions that might affect code display
@@ -432,7 +471,7 @@ function App() {
       }
 
       // Only re-apply for interactions that might cause layout changes
-      if (e.type === 'click' && !e.target.closest('.messages')) {
+      if (e.type === 'click' && !e.target.closest('.messages') && !e.target.closest('.sidebar')) {
         reapplyHighlighting();
       }
     };
@@ -460,13 +499,10 @@ function App() {
             onChange={e => setModel(e.target.value)}
             className="model-select"
           >
+            <option value="qwen2:1.5b">qwen2:1.5b</option>
             <option value="qwen3:1.7b">qwen3:1.7b</option>
             <option value="qwen3:8b">qwen3:8b</option>
-            <option value="qwen2:1.5b">qwen2:1.5b</option>
             <option value="codegemma:2b">codegemma:2b</option>
-            <option value="codegemma:7b">codegemma:7b</option>
-            <option value="deepseek-r1:7b">deepseek-r1:7b</option>
-            <option value="gpt-oss:20b">gpt-oss:20b</option>
           </select>
         </div>
       </header>

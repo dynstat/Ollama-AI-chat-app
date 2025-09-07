@@ -96,7 +96,7 @@ You can override settings via environment variables:
 ```bash
 # Backend environment variables
 OLLAMA_HOST=https://vspace.store/ollama/
-OLLAMA_MODEL=qwen3:1.7b
+OLLAMA_MODEL=qwen2:1.5b
 API_KEY=your-api-key  # Optional
 
 # Docker resource limits (in docker-compose.yml)
